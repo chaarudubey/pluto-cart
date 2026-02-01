@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: cart-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/cart
+    username: myuser
+    password: mypassword
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+
+management:
+  endpoints:
+    web:
+      base-path: /
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+server:
+  port: 8084
+

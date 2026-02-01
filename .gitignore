@@ -1,0 +1,26 @@
+# IntelliJ IDEA
+.idea/
+**/.idea/
+*.iml
+*.ipr
+*.iws
+
+# Java bytecode
+*.class
+
+# Maven build output (all modules)
+**/target/
+**/cart-service/target/
+**/order-service/target/
+**/user-service/target/
+**/product-service/target/
+**/common-exception/target/
+**/common-utils/target/
+**/common-security/target/
+
+# Logs
+*.log
+
+# OS junk`
+.DS_Store
+Thumbs.db

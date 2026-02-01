@@ -1,0 +1,59 @@
+version: "3.9"
+
+services:
+  postgres-db:
+    image: postgres:16
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init-scripts:/docker-entrypoint-initdb.d
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+
+  mysql-db:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysqldata:/var/lib/mysql
+      - ./db/mysql-init-scripts:/docker-entrypoint-initdb.d
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: ordersdb
+      MYSQL_USER: order_user
+      MYSQL_PASSWORD: order_password
+
+  user-service:
+    build: ./services/user-service
+    ports:
+      - "8081:8081"
+
+
+  product-service:
+    build: ./services/product-service
+    ports:
+      - "8082:8082"
+
+  cart-service:
+    build: ./services/cart-service
+    environment:
+        - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/cart
+        - SPRING_DATASOURCE_USERNAME=myuser
+        - SPRING_DATASOURCE_PASSWORD=mypassword
+    ports:
+      - "8083:8083"
+
+  order-service:
+    build: ./services/order-service
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/ordersdb
+      - SPRING_DATASOURCE_USERNAME=order_user
+      - SPRING_DATASOURCE_PASSWORD=order_password
+    ports:
+      - "8084:8084"
+
+volumes:
+  pgdata:
+  mysqldata:
