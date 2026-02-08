@@ -1,5 +1,5 @@
 services:
-  postgres-db:
+  user-postgres-db:
     image: postgres:16
     ports:
       - "5432:5432"
@@ -7,22 +7,37 @@ services:
       - pgdata:/var/lib/postgresql/data
       - ./db/init-scripts:/docker-entrypoint-initdb.d
     environment:
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: user_service_db
+      POSTGRES_USER: user_service_username
+      POSTGRES_PASSWORD: user_service_password
 
-  mysql-db:
-    image: mysql:8.0
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysqldata:/var/lib/mysql
-      - ./db/mysql-init-scripts:/docker-entrypoint-initdb.d
-    environment:
-      MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_DATABASE: ordersdb
-      MYSQL_USER: order_user
-      MYSQL_PASSWORD: order_password
+#  cart-postgres-db:
+#    image: postgres:16
+#    ports:
+#      - "5432:5432"
+#    volumes:
+#      - pg_data:/var/lib/postgresql/data
+#      - ./db/init-scripts:/docker-entrypoint-initdb.d
+#    environment:
+#      POSTGRES_DATABASE: cart_db
+#      POSTGRES_USER: cart_username
+#      POSTGRES_PASSWORD: cart_password
+
+
+
+#  mysql-db:
+#    image: mysql:8.0
+#    ports:
+#      - "3306:3306"
+#    volumes:
+#      - mysqldata:/var/lib/mysql
+#      - ./db/mysql-init-scripts:/docker-entrypoint-initdb.d
+#    environment:
+#      MYSQL_ROOT_PASSWORD: root_password
+#      MYSQL_DATABASE: ordersdb
+#      MYSQL_USER: order_user
+#      MYSQL_PASSWORD: order_password
 
 volumes:
   pgdata:
-  mysqldata:
+  #mysqldata:

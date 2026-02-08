@@ -2,11 +2,8 @@ spring:
   application:
     name: order-service
 
-  datasource:
-    url: jdbc:mysql://localhost:3306/ordersdb
-    username: order_user
-    password: order_password
-    driver-class-name: com.mysql.cj.jdbc.Driver
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
 
 management:
   endpoints:
