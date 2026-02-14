@@ -24,3 +24,7 @@
 # OS junk`
 .DS_Store
 Thumbs.db
+
+.env
+*.md
+!README.md
