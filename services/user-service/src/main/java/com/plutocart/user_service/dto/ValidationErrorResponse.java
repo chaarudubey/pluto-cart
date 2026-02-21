@@ -18,8 +18,7 @@ public record ValidationErrorResponse(
 
 public record FieldError(
         String field,
-        String message,
-        Object rejectedValue
+        String message
 ) {
 }
 }

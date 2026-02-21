@@ -39,8 +39,7 @@ public class GlobalExceptionHandler {
                 .stream()
                 .map(error -> new ValidationErrorResponse.FieldError(
                         error.getField(),
-                        error.getDefaultMessage(),
-                        error.getRejectedValue()
+                        error.getDefaultMessage()
                 )) .toList();
 
         var errorResponse = new ValidationErrorResponse(
@@ -52,6 +51,19 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(errorResponse);
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ErrorResponse> invalidCredentialsException(InvalidCredentialsException ex, HttpServletRequest request) {
+        log.error("An unexpected error occurred: {}", ex.getMessage(), ex);
+        var errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                ex.getMessage(),
+                Instant.now(),
+                "Bad Request",
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 
 @ExceptionHandler(Exception.class)

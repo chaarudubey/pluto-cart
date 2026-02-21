@@ -1,7 +1,10 @@
 package com.plutocart.user_service.service;
 
+import com.plutocart.user_service.dto.LoginRequest;
+import com.plutocart.user_service.dto.LoginResponse;
 import com.plutocart.user_service.dto.RegistrationRequest;
 import com.plutocart.user_service.dto.RegistrationResponse;
+import com.plutocart.user_service.exception.InvalidCredentialsException;
 import com.plutocart.user_service.exception.UserAlreadyExistsException;
 import com.plutocart.user_service.model.Users;
 import jakarta.transaction.Transactional;
@@ -58,6 +61,34 @@ public class UsersService {
                 savedUser.getIsActive(),
                 savedUser.getUserType(),
                 savedUser.getCreatedAt(),
+                accessToken,
+                refreshToken
+        );
+    }
+
+    public LoginResponse loginUser(LoginRequest request) {
+        log.info("Attempting login for email: {}", request.username());
+
+        var userOpt = usersRepository.findByEmail(request.username());
+        if (userOpt.isEmpty()) {
+            log.warn("Login failed: Username {} not found", request.username());
+            throw new InvalidCredentialsException("Username or Password Incorrect");
+        }
+
+        var user = userOpt.get();
+        if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
+            log.info("Login failed: Incorrect password for email {}", request.username());
+            throw new InvalidCredentialsException("Username or Password Incorrect");
+        }
+
+        var accessToken = jwtService.generateAccessToken(user.getId(), user.getEmail());
+        var refreshToken = jwtService.generateRefreshToken(user.getId(), user.getEmail());
+
+        log.info("Login successful for email: {}", request.username());
+        return new LoginResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getFullName(),
                 accessToken,
                 refreshToken
         );

@@ -21,6 +21,9 @@ public record RegistrationRequest (
     @Size(max = 150, message = "Full name must not exceed 150 characters")
     String fullName,
 
+    @Size(max = 10, message = "Phone number should be 10 characters")
+    @Size(min = 10, message = "Phone number should be 10 characters")
+    @Pattern(regexp = "^[0-9]+$", message = "Phone number must contain only digits")
     String phoneNumber
 ) {
     public RegistrationRequest {

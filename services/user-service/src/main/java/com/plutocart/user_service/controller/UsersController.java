@@ -1,8 +1,7 @@
 package com.plutocart.user_service.controller;
 
-import com.plutocart.user_service.dto.ErrorResponse;
-import com.plutocart.user_service.dto.RegistrationRequest;
-import com.plutocart.user_service.dto.RegistrationResponse;
+import com.plutocart.user_service.dto.*;
+import com.plutocart.user_service.exception.InvalidCredentialsException;
 import com.plutocart.user_service.service.UsersService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -13,12 +12,16 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.time.Duration;
 
 @RestController
 @RequestMapping("/api/users")
@@ -77,6 +80,54 @@ public class UsersController {
                 .status(HttpStatus.CREATED)
                 .body(response);
     }
+
+    @PostMapping("/login")
+    @Operation(
+            summary = "Login a user",
+            description = """
+                Login with Username and Password.
+                Your username is your email address.
+                """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200",
+                    description = "User Login successfully",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = LoginResponse.class)
+                    )
+            ),
+            @ApiResponse(responseCode = "401",
+                    description = "Unauthorized, Invalid username or password",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = InvalidCredentialsException.class)
+                    )
+            ),
+            @ApiResponse(responseCode = "500",
+                    description = "Internal Server Error",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )
+            )
+    })
+    public ResponseEntity<LoginResponse> loginUser(@Valid @RequestBody LoginRequest request) {
+        var response = usersService.loginUser(request);
+
+        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", response.refreshToken())
+                .httpOnly(false)
+                .secure(false) // true in production (HTTPS only)
+                //.path("/api/auth/refresh") // restrict usage
+                .maxAge(Duration.ofDays(7))
+                .sameSite("None") // or "Lax"
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                .body(response);
+    }
+
 
     /**
      * TODO: Implement below Endpoints
