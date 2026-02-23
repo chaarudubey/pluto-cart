@@ -16,7 +16,7 @@ public class JwtService {
 
     private final JwtConfig jwtConfig;
 
-    public String generateAccessToken(UUID userId, String email) {
+    public String generateAccessToken(UUID userId, String email, String role) {
         var now = Instant.now();
         var expirationTime = Date.from(now.plusMillis(jwtConfig.getAccessTokenExpiration()));
 
@@ -29,11 +29,12 @@ public class JwtService {
                 .claim("id", userId.toString())
                 .claim("email", email)
                 .claim("type", "access")
+                .claim("role", role)
                 .signWith(jwtConfig.getSecretKey())
                 .compact();
     }
 
-    public String generateRefreshToken(UUID userId, String email) {
+    public String generateRefreshToken(UUID userId, String email, String role) {
         var now = Instant.now();
         var expirationTime = Date.from(now.plusMillis(jwtConfig.getRefreshTokenExpiration()));
 
@@ -46,6 +47,7 @@ public class JwtService {
                 .claim("id", userId.toString())
                 .claim("email", email)
                 .claim("type", "refresh")
+                .claim("role", role)
                 .signWith(jwtConfig.getSecretKey())
                 .compact();
     }
@@ -58,18 +60,14 @@ public class JwtService {
                 .getPayload();
     }
 
-    public boolean isTokenExpired(String token) {
-        try{
-            var claims = validateToken(token);
-            return claims.getExpiration().before(new Date());
-        } catch (Exception e) {
-            return true;
-        }
-    }
-
     public String getEmailFromToken(String token) {
         var claims = validateToken(token);
         return claims.getSubject();
+    }
+
+    public String getRoleFromToken(String token) {
+        var claims = validateToken(token);
+        return claims.get("role", String.class);
     }
 
     public UUID getUserIdFromToken(String token) {

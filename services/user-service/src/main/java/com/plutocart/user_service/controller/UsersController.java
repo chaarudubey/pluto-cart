@@ -16,10 +16,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
 
@@ -128,10 +126,47 @@ public class UsersController {
                 .body(response);
     }
 
+    @GetMapping("/me")
+    @Operation(
+            summary = "Get User Profile",
+            description = """
+                Get the profile information of the currently authenticated user.
+                """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200",
+                    description = "User Retrieved successfully",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = UserResponse.class)
+                    )
+            ),
+            @ApiResponse(responseCode = "403",
+                    description = "Unauthorized",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = InvalidCredentialsException.class)
+                    )
+            ),
+            @ApiResponse(responseCode = "500",
+                    description = "Internal Server Error",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )
+            )
+    })
+    public ResponseEntity<UserResponse> getUser() {
+        Object username = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        var response = usersService.getUser(username.toString());
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(response);
+    }
 
     /**
      * TODO: Implement below Endpoints
-     * 1. POST /api/users/login - User Login
+     * 1. POST /api/users/login - User Login - Done
      * 2. GET /api/users/me - Get User Profile (Authenticated)
      * 3. PUT /api/users/me - Update User Profile (Authenticated)
      * 4. POST /api/users/refresh-token - Refresh JWT Access Token

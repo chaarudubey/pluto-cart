@@ -1,9 +1,6 @@
 package com.plutocart.user_service.service;
 
-import com.plutocart.user_service.dto.LoginRequest;
-import com.plutocart.user_service.dto.LoginResponse;
-import com.plutocart.user_service.dto.RegistrationRequest;
-import com.plutocart.user_service.dto.RegistrationResponse;
+import com.plutocart.user_service.dto.*;
 import com.plutocart.user_service.exception.InvalidCredentialsException;
 import com.plutocart.user_service.exception.UserAlreadyExistsException;
 import com.plutocart.user_service.model.Users;
@@ -42,7 +39,7 @@ public class UsersService {
                 .fullName(request.fullName())
                 .phoneNumber(request.phoneNumber())
                 .isActive(true)
-                .userType("CUSTOMER")
+                .userType("ROLE_CUSTOMER")
                 .failedLoginAttempts(0)
                 .isDeleted(false)
                 .build();
@@ -50,8 +47,8 @@ public class UsersService {
         var savedUser = usersRepository.save(user);
         log.info("User Registered Successfully: ID={}, Email={}", savedUser.getId(), savedUser.getEmail());
 
-        var accessToken = jwtService.generateAccessToken(savedUser.getId(), savedUser.getEmail());
-        var refreshToken = jwtService.generateRefreshToken(savedUser.getId(), savedUser.getEmail());
+        var accessToken = jwtService.generateAccessToken(savedUser.getId(), savedUser.getEmail(), savedUser.getUserType());
+        var refreshToken = jwtService.generateRefreshToken(savedUser.getId(), savedUser.getEmail(), savedUser.getUserType());
 
         return new RegistrationResponse(
                 savedUser.getId(),
@@ -81,8 +78,8 @@ public class UsersService {
             throw new InvalidCredentialsException("Username or Password Incorrect");
         }
 
-        var accessToken = jwtService.generateAccessToken(user.getId(), user.getEmail());
-        var refreshToken = jwtService.generateRefreshToken(user.getId(), user.getEmail());
+        var accessToken = jwtService.generateAccessToken(user.getId(), user.getEmail(), user.getUserType());
+        var refreshToken = jwtService.generateRefreshToken(user.getId(), user.getEmail(), user.getUserType());
 
         log.info("Login successful for email: {}", request.username());
         return new LoginResponse(
@@ -91,6 +88,27 @@ public class UsersService {
                 user.getFullName(),
                 accessToken,
                 refreshToken
+        );
+    }
+
+    public UserResponse getUser(String username) {
+        var userOpt = usersRepository.findByEmail(username);
+        if (userOpt.isEmpty()) {
+            log.warn("User not found with Username: {}", username);
+            throw new RuntimeException("User not found");
+        }
+
+        var user = userOpt.get();
+        return new UserResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getFullName(),
+                user.getPhoneNumber(),
+                user.getIsActive(),
+                user.getUserType(),
+                user.getCreatedAt(),
+                user.getUpdatedAt(),
+                user.getLastLoginAt()
         );
     }
 }
