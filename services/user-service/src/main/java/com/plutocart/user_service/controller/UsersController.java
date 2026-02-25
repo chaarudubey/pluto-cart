@@ -164,10 +164,129 @@ public class UsersController {
                 .body(response);
     }
 
+
+
+    @PatchMapping("/me")
+    @Operation(
+            summary = "Update User Profile",
+            description = """
+                Update the profile information of the currently authenticated user.
+                """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200",
+                    description = "User Updated successfully",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = UserResponse.class)
+                    )
+            ),
+            @ApiResponse(responseCode = "403",
+                    description = "Unauthorized",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = InvalidCredentialsException.class)
+                    )
+            ),
+            @ApiResponse(responseCode = "500",
+                    description = "Internal Server Error",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )
+            )
+    })
+    public ResponseEntity<UserResponse> updateUser(@Valid @RequestBody UserRequest userRequest) {
+        Object username = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        var response = usersService.updateUser(username.toString(), userRequest);
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(response);
+    }
+
+    @DeleteMapping("/me")
+    @Operation(
+            summary = "User Profile Deactivated",
+            description = """
+                Deactivate the current authenticated user's profile.
+                This will mark the user as inactive and prevent them from logging in, but their data will remain in the system for record-keeping and potential reactivation.
+                """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200",
+                    description = "User Deactivated successfully",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = UserResponse.class)
+                    )
+            ),
+            @ApiResponse(responseCode = "403",
+                    description = "Unauthorized",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = InvalidCredentialsException.class)
+                    )
+            ),
+            @ApiResponse(responseCode = "500",
+                    description = "Internal Server Error",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )
+            )
+    })
+    public ResponseEntity<Boolean> deactivateUser() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString();
+        var response = usersService.deactivateUser(username);
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(response);
+    }
+
+
+
+    @GetMapping("/refresh-token")
+    @Operation(
+            summary = "Refresh JWT Access Token",
+            description = """
+                When the access token expires, use the refresh token to obtain a new access token without requiring the user to log in again. The refresh token should be sent in the request (e.g., as an HTTP-only cookie or in the request body). 
+                The server will validate the refresh token and, if valid, issue a new access token.
+                """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200",
+                    description = "Access Token Refreshed successfully",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = UserResponse.class)
+                    )
+            ),
+            @ApiResponse(responseCode = "403",
+                    description = "Unauthorized",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = InvalidCredentialsException.class)
+                    )
+            ),
+            @ApiResponse(responseCode = "500",
+                    description = "Internal Server Error",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )
+            )
+    })
+    public ResponseEntity<String> refreshAccessToken() {
+        Object username = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        var response = usersService.refreshAccessToken(username.toString());
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(response);
+    }
     /**
      * TODO: Implement below Endpoints
      * 1. POST /api/users/login - User Login - Done
-     * 2. GET /api/users/me - Get User Profile (Authenticated)
+     * 2. GET /api/users/me - Get User Profile (Authenticated) - Done
      * 3. PUT /api/users/me - Update User Profile (Authenticated)
      * 4. POST /api/users/refresh-token - Refresh JWT Access Token
      * 5. POST /api/users/logout - User Logout (Invalidate Refresh Token)

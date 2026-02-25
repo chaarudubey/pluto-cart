@@ -5,11 +5,14 @@ import com.plutocart.user_service.exception.InvalidCredentialsException;
 import com.plutocart.user_service.exception.UserAlreadyExistsException;
 import com.plutocart.user_service.model.Users;
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.plutocart.user_service.repository.UsersRepository;
+
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -110,5 +113,62 @@ public class UsersService {
                 user.getUpdatedAt(),
                 user.getLastLoginAt()
         );
+    }
+
+    public UserResponse updateUser(String username, @Valid UserRequest userRequest) {
+        var userOpt = usersRepository.findByEmail(username);
+        if (userOpt.isEmpty()) {
+            log.warn("User not found with Username: {}", username);
+            throw new RuntimeException("User not found");
+        }
+
+        var user = userOpt.get();
+        user.setFullName(userRequest.fullName());
+        user.setPhoneNumber(userRequest.phoneNumber());
+        user.setIsActive(userRequest.isActive());
+
+        var updatedUser = usersRepository.save(user);
+        return new UserResponse(
+                updatedUser.getId(),
+                updatedUser.getEmail(),
+                updatedUser.getFullName(),
+                updatedUser.getPhoneNumber(),
+                updatedUser.getIsActive(),
+                updatedUser.getUserType(),
+                updatedUser.getCreatedAt(),
+                updatedUser.getUpdatedAt(),
+                updatedUser.getLastLoginAt()
+        );
+    }
+
+    public Boolean deactivateUser(String username) {
+        var userOpt = usersRepository.findByEmail(username);
+        if (userOpt.isEmpty()) {
+            log.warn("User not found with Username: {}", username);
+            throw new RuntimeException("User not found");
+        }
+
+        var user = userOpt.get();
+        user.setIsActive(false);
+
+        var updatedUser = usersRepository.save(user);
+        return updatedUser.getIsActive();
+    }
+
+    @Transactional
+    public String refreshAccessToken(String username) {
+        log.info("Registering new user with email: {}", username);
+
+        Optional<Users> userInfo = usersRepository.findByEmail(username);
+
+        if(userInfo.isEmpty() || !userInfo.get().getIsActive()) {
+            log.warn("User not valid, Cannot Retrieve Access Token: {}", username);
+            throw new RuntimeException("User not valid, Cannot Retrieve Access Token");
+        }
+
+        Users userData = userInfo.get();
+
+       return jwtService.generateAccessToken(userData.getId(), userData.getEmail(), userData.getUserType());
+
     }
 }
